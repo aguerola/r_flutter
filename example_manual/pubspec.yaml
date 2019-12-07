@@ -1,0 +1,8 @@
+name: example_manual
+
+dev_dependencies:
+  r_flutter:
+    path: ../
+
+r_flutter:
+  outputFilename: lib/r.g.dart

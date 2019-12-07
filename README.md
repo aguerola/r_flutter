@@ -105,6 +105,27 @@ If the error constits, check the `assets.dart` and maybe add a Whitespace somewh
 
 The iOS project need to be updated: [Documentation](https://flutter.dev/docs/development/accessibility-and-localization/internationalization#appendix-updating-the-ios-app-bundle)
 
+#### Default code generation method doesn't work
+If `flutter generate` does not work for you, try running the generation script manually. To do this, first add r_flutter as dev_dependency (instead of as builder):
+```
+dev_dependencies:
+  r_flutter: any
+```
+
+Specify output path for the file:
+
+```yaml
+r_flutter:
+  outputFilename: lib/r.g.dart
+```
+
+
+Finally, run the generation:
+```
+flutter pub run r_flutter:generate
+```
+
+
 ## Examples
 
 ##### Images
