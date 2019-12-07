@@ -11,8 +11,6 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  runtime_arb:
-    path: ../runtime_arb
 
 builders:
   r_flutter:
@@ -48,3 +46,4 @@ r_flutter:
     ".svg":
       import: asset_classes.dart
       class: SvgFile
+  documentationStyle: html

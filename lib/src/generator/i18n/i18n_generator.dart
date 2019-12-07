@@ -1,3 +1,4 @@
+import 'package:r_flutter/src/arguments.dart';
 import 'package:r_flutter/src/generator/i18n/i18n_generator_utils.dart';
 import 'package:r_flutter/src/model/dart_class.dart';
 import 'package:r_flutter/src/model/i18n.dart';
@@ -43,7 +44,7 @@ import 'package:r_flutter/src/model/i18n.dart';
 ///}
 /// ```
 ///
-DartClass generateI18nClass(I18nLocales i18n) {
+DartClass generateI18nClass(I18nLocales i18n, Arguments arg) {
   StringBuffer classString = StringBuffer("""class I18n {
   final I18nLookup _lookup;
 
@@ -63,7 +64,7 @@ DartClass generateI18nClass(I18nLocales i18n) {
 """);
 
   classString.writeln(_generateSupportedLocales(i18n));
-  classString.write(_generateAccessorMethods(i18n));
+  classString.write(_generateAccessorMethods(i18n, arg));
   classString.write(_generateGetStringMethod(i18n));
 
   classString.writeln("}");
@@ -93,14 +94,14 @@ String _generateSupportedLocales(I18nLocales i18n) {
   return code.toString();
 }
 
-String _generateAccessorMethods(I18nLocales i18n) {
+String _generateAccessorMethods(I18nLocales i18n, Arguments args) {
   String code = "";
 
   List<I18nString> values = i18n.defaultValues.strings;
 
   for (var value in values) {
     String methodCall = _stringValueMethodName(value);
-    code += _genrateAccessorMethodComment(i18n, value);
+    code += _generateAccessorMethodComment(i18n, value, args);
     code += generateMethod(
             name: value.escapedKey,
             parameters: value.placeholders,
@@ -112,16 +113,23 @@ String _generateAccessorMethods(I18nLocales i18n) {
   return code;
 }
 
-String _genrateAccessorMethodComment(I18nLocales i18n, I18nString string) {
-  StringBuffer code = StringBuffer();
-  code
-    ..writeln("  ///")
-    ..writeln("  /// <table style=\"width:100%\">")
-    ..writeln("  ///   <tr>")
-    ..writeln("  ///     <th>Locale</th>")
-    ..writeln("  ///     <th>Translation</th>")
-    ..writeln("  ///   </tr>");
+String _generateAccessorMethodComment(
+    I18nLocales i18n, I18nString string, Arguments args) {
+  switch (args.documentationStyle) {
+    case DocumentationStyle.html:
+      return _generateAccessorMethodCommentHtml(i18n, string);
+    case DocumentationStyle.markdown:
+      return _generateAccessorMethodCommentMarkdown(i18n, string);
+    case DocumentationStyle.none:
+      return '';
+  }
 
+  return '';
+}
+
+/// Returns localizations of given string key.
+Iterable<MapEntry<String, String>> getValues(
+    I18nLocales i18n, I18nString string) sync* {
   final locales = i18n.locales.toList()
     ..sort((item1, item2) =>
         item1.locale.toString().compareTo(item2.locale.toString()))
@@ -133,15 +141,54 @@ String _genrateAccessorMethodComment(I18nLocales i18n, I18nString string) {
     final translation = item.strings
         .firstWhere((it) => it.key == string.key, orElse: () => null);
 
+    String value;
+
+    if (translation != null) {
+      value = escapeStringLiteral(translation.value);
+    }
+
+    yield MapEntry(localeString, value);
+  }
+}
+
+String _generateAccessorMethodCommentMarkdown(
+    I18nLocales i18n, I18nString string) {
+  StringBuffer code = StringBuffer();
+
+  final values = getValues(i18n, string).toList();
+  final first = values.removeAt(0);
+
+  code.writeln("  /// |||");
+  code.writeln('  /// ---|---');
+  code.writeln('  /// __${first.key}__ | ${first.value}');
+  for (var item in values) {
+    code.writeln('  /// ${item.key} | ${item.value ?? '⚠'}');
+  }
+
+  return code.toString();
+}
+
+String _generateAccessorMethodCommentHtml(I18nLocales i18n, I18nString string) {
+  StringBuffer code = StringBuffer();
+  code
+    ..writeln("  ///")
+    ..writeln("  /// <table style=\"width:100%\">")
+    ..writeln("  ///   <tr>")
+    ..writeln("  ///     <th>Locale</th>")
+    ..writeln("  ///     <th>Translation</th>")
+    ..writeln("  ///   </tr>");
+
+  final values = getValues(i18n, string);
+
+  for (var item in values) {
     code
       ..writeln("  ///   <tr>")
-      ..writeln("  ///     <td style=\"width:60px;\">$localeString</td>");
+      ..writeln("  ///     <td style=\"width:60px;\">${item.key}</td>");
 
-    if (translation == null) {
+    if (item.value == null) {
       code.writeln("  ///     <td><font color=\"yellow\">⚠</font></td>");
     } else {
-      code.writeln(
-          "  ///     <td>\"${escapeStringLiteral(translation.value)}\"</td>");
+      code.writeln("  ///     <td>\"${item.value}\"</td>");
     }
     code.writeln("  ///   </tr>");
   }

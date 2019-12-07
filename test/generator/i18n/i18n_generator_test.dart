@@ -1,3 +1,4 @@
+import 'package:r_flutter/src/arguments.dart';
 import 'package:r_flutter/src/generator/i18n/i18n_generator.dart';
 import 'package:r_flutter/src/model/i18n.dart';
 import 'package:test/test.dart';
@@ -45,9 +46,9 @@ void main() {
   ]);
 
   test("test i18n generation", () {
-      final generatedClass = generateI18nClass(testData);
-      expect(generatedClass.imports, []);
-      expect(generatedClass.code, """class I18n {
+    final generatedClass = generateI18nClass(testData, Arguments());
+    expect(generatedClass.imports, []);
+    expect(generatedClass.code, """class I18n {
   final I18nLookup _lookup;
 
   I18n(this._lookup);

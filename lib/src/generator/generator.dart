@@ -10,7 +10,7 @@ import 'i18n/generator.dart';
 String generateFile(Resources res, Arguments arguments) {
   List<DartClass> classes = [];
   if (res.i18n != null) {
-    classes.addAll(generateI18nClasses(res.i18n));
+    classes.addAll(generateI18nClasses(res.i18n, arguments));
   }
   classes.add(generateFontClass(res.fonts));
   classes.addAll(generateAssetsClass(res.assets.assets));
@@ -18,7 +18,12 @@ String generateFile(Resources res, Arguments arguments) {
   classes = classes.where((item) => item != null).toList();
 
   StringBuffer fullCode = StringBuffer("");
-  fullCode.writeln('//ignore_for_file: directives_ordering, camel_case_types');
+
+  if (classes.isNotEmpty) {
+    fullCode.writeln(
+        '//ignore_for_file: directives_ordering, camel_case_types, unnecessary_brace_in_string_interps');
+  }
+
   List<String> imports = classes.expand((it) => it.imports).toSet().toList();
   imports.sort();
   for (var import in imports) {

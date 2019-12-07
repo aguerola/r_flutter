@@ -29,44 +29,6 @@ Resources parseResources(Arguments arguments) {
   );
 }
 
-Arguments parseYamlArguments(YamlMap yaml) {
-  final arguments = Arguments()
-    ..pubspecFilename = 'pubspec.yaml'
-    ..outputFilename = 'assets.dart';
-
-  yaml = yaml["r_flutter"];
-  if (yaml == null) {
-    return arguments;
-  }
-
-  arguments.outputFilename = yaml["outputFilename"] ?? arguments.outputFilename;
-
-  final YamlList ignoreRaw = yaml['ignore'];
-  arguments.ignoreAssets = ignoreRaw?.map((x) => x as String)?.toList() ?? [];
-  arguments.intlFilename = yaml['intl'];
-
-  final YamlMap assetClasses = yaml['asset_classes'];
-  final classes = <CustomAssetType>[];
-  for (var key in assetClasses?.keys ?? []) {
-    final Object value = assetClasses[key];
-    var import = CustomAssetType.defaultImport;
-    String className;
-    if (value is YamlMap) {
-      className = value['class'];
-      import = value['import'] ?? import;
-    } else if (value is String) {
-      className = value;
-    } else {
-      assert(false);
-    }
-
-    classes.add(CustomAssetType(className, key, import));
-  }
-  arguments.assetClasses = classes;
-
-  return arguments;
-}
-
 class AssetsBuilder extends Builder {
   /// This is needed to let build system know that we depend on given file
   Future<void> check(BuildStep buildStep, String filename) async {

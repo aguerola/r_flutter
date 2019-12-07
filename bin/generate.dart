@@ -2,6 +2,7 @@
 import 'dart:io';
 
 import 'package:r_flutter/builder.dart';
+import 'package:r_flutter/src/arguments.dart';
 import 'package:r_flutter/src/generator/generator.dart';
 import 'package:yaml/yaml.dart';
 

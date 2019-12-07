@@ -1,3 +1,4 @@
+//ignore_for_file: directives_ordering, camel_case_types, unnecessary_brace_in_string_interps
 import 'asset_classes.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';

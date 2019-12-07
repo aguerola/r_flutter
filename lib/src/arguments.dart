@@ -1,41 +1,72 @@
-import 'package:args/args.dart';
 import 'package:r_flutter/src/model/resources.dart';
+import 'package:yaml/yaml.dart';
+
+enum DocumentationStyle {
+  /// Works in Android Studio
+  html,
+
+  /// Works in VSCode
+  markdown,
+
+  none
+}
 
 class Arguments {
-  String pubspecFilename;
+  String pubspecFilename = 'pubspec.yaml';
   List<String> ignoreAssets = [];
-  String outputFilename;
+  String outputFilename = 'assets.dart';
   String intlFilename;
   List<CustomAssetType> assetClasses;
+  DocumentationStyle documentationStyle = DocumentationStyle.html;
+}
 
-  void parse(List<String> args) {
-    ArgParser()
-      ..addOption(
-        "pubspec-file",
-        defaultsTo: 'pubspec.yaml',
-        callback: (value) => pubspecFilename = value,
-        help: 'Specify the pubspec file.',
-      )
-      ..addOption(
-        "ignore-assets",
-        defaultsTo: '',
-        callback: (String value) {
-          ignoreAssets =
-              value.split(r",").where((item) => item.isNotEmpty).toList();
-        },
-        help:
-            'Specify asset folder which should be ignored for generating constants. Seperated by ","',
-      )
-      ..addOption("intl-file",
-          defaultsTo: '',
-          callback: (value) => intlFilename = value,
-          help: 'Specify intl arb file to generate bindings for.')
-      ..addOption(
-        "output-file",
-        defaultsTo: 'lib/r.g.dart',
-        callback: (value) => outputFilename = value,
-        help: 'Specify the output file.',
-      )
-      ..parse(args);
+T parseEnum<T>(String input, List<T> values) {
+  for (var value in values) {
+    final stringValue = '$value'.split('.').last;
+
+    if (stringValue == input) {
+      return value;
+    }
   }
+
+  return null;
+}
+
+Arguments parseYamlArguments(YamlMap yaml) {
+  final arguments = Arguments();
+
+  yaml = yaml["r_flutter"];
+  if (yaml == null) {
+    return arguments;
+  }
+
+  arguments.outputFilename = yaml["outputFilename"] ?? arguments.outputFilename;
+  arguments.documentationStyle =
+      parseEnum(yaml["documentationStyle"], DocumentationStyle.values) ??
+          DocumentationStyle.html;
+
+  final YamlList ignoreRaw = yaml['ignore'];
+  arguments.ignoreAssets = ignoreRaw?.map((x) => x as String)?.toList() ?? [];
+  arguments.intlFilename = yaml['intl'];
+
+  final YamlMap assetClasses = yaml['asset_classes'];
+  final classes = <CustomAssetType>[];
+  for (var key in assetClasses?.keys ?? []) {
+    final Object value = assetClasses[key];
+    var import = CustomAssetType.defaultImport;
+    String className;
+    if (value is YamlMap) {
+      className = value['class'];
+      import = value['import'] ?? import;
+    } else if (value is String) {
+      className = value;
+    } else {
+      assert(false);
+    }
+
+    classes.add(CustomAssetType(className, key, import));
+  }
+  arguments.assetClasses = classes;
+
+  return arguments;
 }

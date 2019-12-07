@@ -6,10 +6,10 @@ import 'package:test/test.dart';
 import 'package:build_test/build_test.dart';
 import 'package:path/path.dart' as p;
 
-Directory savedCurrentDirectory;
+import 'current_directory.dart';
 
 PackageAssetReader readerForExampleAssets() {
-  Directory.current = savedCurrentDirectory.path + '/example';
+  setCurrentDirectory('example');
 
   final path = p.join(Directory.current.path, 'lib');
 
